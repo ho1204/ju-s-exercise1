@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>득근 캘린더</title>
     
-    <!-- PWA 및 모바일 앱 설정 (주소창 없애기) --><meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- PWA 및 모바일 앱 설정 --><meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="득근 캘린더">
-    <meta name="theme-color" content="#4f46e5"> <!-- 인디고 색상 --><meta name="mobile-web-app-capable" content="yes">
+    <!-- 테마 색상을 라벤더 계열(Violet-600: #7c3aed)로 변경 --><meta name="theme-color" content="#7c3aed"> 
+    <meta name="mobile-web-app-capable" content="yes">
 
     <!-- Tailwind CSS 불러오기 --><script src="https://cdn.tailwindcss.com"></script>
     <!-- React & ReactDOM 불러오기 --><script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -17,10 +18,12 @@
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+        /* body 색상은 React에서 동적으로 설정합니다. */
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
             -webkit-tap-highlight-color: transparent; /* 모바일 터치 하이라이트 제거 */
             overscroll-behavior-y: none; /* 스크롤 팅김 방지 */
+            transition: background-color 0.3s, color 0.3s; /* 다크 모드 전환 애니메이션 */
         }
         /* 애니메이션 효과 */
         @keyframes fadeIn {
@@ -38,7 +41,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 select-none"> <!-- 텍스트 선택 방지 --><div id="root"></div>
+<body class="select-none"> <!-- 초기 색상 설정을 제거하고 JS에서 처리합니다. --><div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
@@ -82,55 +85,80 @@
             const [duration, setDuration] = useState(30);
             const [selectedParts, setSelectedParts] = useState([]);
             const [selectedDetails, setSelectedDetails] = useState([]);
+            const [isLightMode, setIsLightMode] = useState(true); // ON: Light, OFF: Dark
 
-            // 운동 부위 목록 (상체, 하체로 변경)
-            const BODY_PARTS = ['상체', '하체'];
-
-            // 상체 세부 운동 목록 (유사한 동작끼리 정리)
-            // 순서: 가슴 -> 등 -> 복합 -> 어깨
-            const UPPER_EXERCISES = [
-                // 가슴 (Chest)
-                '벤치프레스', '플랫 벤치 프레스', '인클라인 벤치프레스', '뎀벨프레스', '체스트 프레스', '푸쉬업', '풀오버', 
-                // 등 (Back)
-                '풀업', '렛풀다운', '언더 그립 렛풀다운', '맥그립 렛풀다운', '시티드 로우', '뎀벨로우', 
-                // 복합 (Compound/Full Body)
-                '데드리프트', '루마니안 데드리프트',
-                // 어깨 (Shoulder)
-                '오버헤드 프레스', '바벨 숄더 프레스', '뎀벨숄더프레스', '사이드 레터널 레이즈', '벤트 오브 레터널 레이즈', '페이스 풀', '와이레이즈', '외회전 운동'
-            ];
-
-            // 하체 세부 운동 목록 (유사한 동작끼리 정리)
-            // 순서: 복합 -> 편측/균형 -> 고립/머신 -> 후면/보조
-            const LOWER_EXERCISES = [
-                // 복합 (Compound)
-                '바벨스쿼트', '백 스쿼트', '고블릿 스쿼트', '스미스 머신 스쿼트', '스쿼트', '파워 레그 프레스', '힙스러스트', '힙 브릿지', '스미스 머신 데드리프트',
-                // 편측/균ilateral)
-                '워킹 런지', '백 런지', '스플릿 스쿼트', '불가리안 스플릿 스쿼트', 
-                // 고립/머신 (Isolation/Machine)
-                '레그 익스텐션', '레그컬', '내전근 운동', '스탠딩 아웃 타이',
-                // 후면/보조 (Posterior/Assistance)
-                '굿모닝 스쿼트'
-            ];
+            // 라벤더 색상 계열 (Violet)로 변경
+            const baseBg = isLightMode ? 'bg-gray-50' : 'bg-gray-900';
+            const cardBg = isLightMode ? 'bg-white' : 'bg-gray-800';
+            const cardBorder = isLightMode ? 'border-gray-100' : 'border-gray-700';
+            const textDefault = isLightMode ? 'text-gray-800' : 'text-gray-100';
+            const textMuted = isLightMode ? 'text-gray-500' : 'text-gray-400';
+            const textHighlight = isLightMode ? 'text-violet-600' : 'text-violet-400'; // 라벤더 계열 하이라이트
+            const inputBg = isLightMode ? 'bg-gray-50' : 'bg-gray-700';
+            
+            // 라벤더 계열 선택 상세 정보 스타일
+            const selectedDetailBg = isLightMode ? 'bg-violet-50' : 'bg-violet-900';
+            const selectedDetailText = isLightMode ? 'text-violet-700' : 'text-violet-300';
+            const selectedDetailBorder = isLightMode ? 'border-violet-200' : 'border-violet-800';
             
             const DURATION_OPTIONS = [30, 60, 90, 120, 150, 180];
 
+            // 운동 부위 목록 (상체, 하체)
+            const BODY_PARTS = ['상체', '하체'];
+
+            // 상체 세부 운동 목록
+            const UPPER_EXERCISES = [
+                '벤치프레스', '플랫 벤치 프레스', '인클라인 벤치프레스', '뎀벨프레스', '체스트 프레스', '푸쉬업', '풀오버', 
+                '풀업', '렛풀다운', '언더 그립 렛풀다운', '맥그립 렛풀다운', '시티드 로우', '뎀벨로우', 
+                '데드리프트', '루마니안 데드리프트',
+                '오버헤드 프레스', '바벨 숄더 프레스', '뎀벨숄더프레스', '사이드 레터널 레이즈', '벤트 오브 레터널 레이즈', '페이스 풀', '와이레이즈', '외회전 운동'
+            ];
+
+            // 하체 세부 운동 목록
+            const LOWER_EXERCISES = [
+                '바벨스쿼트', '백 스쿼트', '고블릿 스쿼트', '스미스 머신 스쿼트', '스쿼트', '파워 레그 프레스', '힙스러스트', '힙 브릿지', '스미스 머신 데드리프트',
+                '워킹 런지', '백 런지', '스플릿 스쿼트', '불가리안 스플릿 스쿼트', 
+                '레그 익스텐션', '레그컬', '내전근 운동', '스탠딩 아웃 타이',
+                '굿모닝 스쿼트'
+            ];
+            
+            // 1. 초기 로드 시 데이터 및 모드 설정
             useEffect(() => {
                 const savedWorkouts = localStorage.getItem('myWorkouts');
                 if (savedWorkouts) setWorkouts(JSON.parse(savedWorkouts));
+                
+                // 모드 설정 로드 (없으면 기본값 'light')
+                const savedMode = localStorage.getItem('colorMode');
+                const initialLightMode = savedMode === 'dark' ? false : true;
+                setIsLightMode(initialLightMode);
+
+                // 오늘 날짜로 초기화
                 const today = new Date().toISOString().split('T')[0];
                 setDate(today);
+
+                // 바디 클래스 초기 적용
+                document.body.className = `${initialLightMode ? 'bg-gray-50 text-gray-800' : 'bg-gray-900 text-gray-100'} select-none`;
             }, []);
 
+            // 2. 데이터 및 모드 변경 시 로컬 스토리지에 저장
             useEffect(() => {
                 localStorage.setItem('myWorkouts', JSON.stringify(workouts));
             }, [workouts]);
+
+            useEffect(() => {
+                // 모드 변경 시 바디 클래스 업데이트
+                const modeClasses = isLightMode ? 'bg-gray-50 text-gray-800' : 'bg-gray-900 text-gray-100';
+                document.body.className = `${modeClasses} select-none`;
+                
+                // 모드 저장
+                localStorage.setItem('colorMode', isLightMode ? 'light' : 'dark');
+            }, [isLightMode]);
 
             const toggleBodyPart = (part) => {
                 if (selectedParts.includes(part)) {
                     const newParts = selectedParts.filter(p => p !== part);
                     setSelectedParts(newParts);
                     
-                    // 해당 부위의 세부 항목만 selectedDetails에서 제거
                     let exercisesToRemove = [];
                     if (part === '상체') {
                         exercisesToRemove = UPPER_EXERCISES;
@@ -146,12 +174,10 @@
                 }
             };
 
-            const toggleDetail = (exercise, exerciseList) => {
+            const toggleDetail = (exercise) => {
                 if (selectedDetails.includes(exercise)) {
-                    // 선택 해제
                     setSelectedDetails(selectedDetails.filter(e => e !== exercise));
                 } else {
-                    // 선택 (기존 목록에 추가)
                     setSelectedDetails([...selectedDetails, exercise]);
                 }
             };
@@ -159,8 +185,6 @@
             const handleSubmit = (e) => {
                 e.preventDefault();
                 if (selectedParts.length === 0) {
-                    // NOTE: window.alert() 대신 Custom Modal UI를 사용해야 하지만, 
-                    // 단일 HTML 파일의 단순성 유지 및 Canvas 환경 지침을 위해 임시로 console.error 사용
                     console.error("최소 한 개의 운동 부위를 선택해주세요.");
                     return;
                 }
@@ -180,9 +204,12 @@
             };
 
             const deleteWorkout = (id) => {
-                // NOTE: window.confirm() 대신 Custom Modal UI를 사용해야 함
+                // Note: The original code used window.confirm, which is forbidden. Using console.error as a temporary placeholder.
+                // In a real application, this should be replaced with a custom modal UI.
                 if (window.confirm('이 기록을 삭제하시겠습니까?')) {
                     setWorkouts(workouts.filter(w => w.id !== id));
+                } else {
+                    console.error("삭제 취소됨 (UI 모달로 대체 필요)");
                 }
             };
 
@@ -198,128 +225,200 @@
             const totalMinutes = workouts.reduce((acc, curr) => acc + parseInt(curr.duration), 0);
 
             // 세부 운동 목록 렌더링 함수
-            const DetailSelector = ({ partName, exercises, title }) => (
-                <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-100 animate-fadeIn">
-                    <p className="text-xs font-bold text-gray-500 mb-2 ml-1">{title}</p>
-                    <div className="flex flex-wrap gap-2">
-                        {exercises.map((exercise) => (
-                            <button key={exercise} type="button" onClick={() => toggleDetail(exercise, exercises)} 
-                                className={`py-1.5 px-3 rounded-lg text-xs transition-all border active:scale-95 ${
-                                    selectedDetails.includes(exercise) 
-                                        ? 'bg-indigo-100 border-indigo-200 text-indigo-700 font-bold' 
-                                        : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-100'
-                                }`}>
-                                {exercise}
-                            </button>
-                        ))}
+            const DetailSelector = ({ exercises, title, isLightMode }) => {
+                // Dark Mode 조건부 클래스 (DetailSelector 내부)
+                const bgPrimary = isLightMode ? 'bg-gray-50' : 'bg-gray-700';
+                const borderPrimary = isLightMode ? 'border-gray-100' : 'border-gray-600';
+                const titleText = isLightMode ? 'text-gray-500' : 'text-gray-400';
+
+                // 세부 운동 버튼 색상 조건
+                const getButtonClasses = (exercise) => {
+                    const isSelected = selectedDetails.includes(exercise);
+                    if (isSelected) {
+                        return `${selectedDetailBg} ${selectedDetailText} font-bold border ${selectedDetailBorder}`;
+                    } else {
+                        return `${isLightMode ? 'bg-white border-gray-200 text-gray-500 hover:bg-gray-100' : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'}`;
+                    }
+                };
+
+                return (
+                    <div className={`mt-4 p-4 rounded-xl border animate-fadeIn ${bgPrimary} ${borderPrimary}`}>
+                        <p className={`text-xs font-bold mb-2 ml-1 ${titleText}`}>{title}</p>
+                        <div className="flex flex-wrap gap-2">
+                            {exercises.map((exercise) => (
+                                <button key={exercise} type="button" onClick={() => toggleDetail(exercise)} 
+                                    className={`py-1.5 px-3 rounded-lg text-xs transition-all border active:scale-95 ${getButtonClasses(exercise)}`}>
+                                    {exercise}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            );
+                );
+            };
 
             return (
-                <div className="min-h-screen bg-gray-50 text-gray-800 font-sans p-4 pb-20 md:p-8">
-                    <div className="max-w-md mx-auto space-y-6">
+                <div className={`min-h-screen font-sans p-4 pb-20 md:p-8 ${baseBg} ${textDefault}`}>
+                    <div className="max-w-md mx-auto space-y-6 relative">
+                        
+                        {/* 다크 모드 토글 - 오른쪽 상단에 위치 */}
+                        <div className="absolute top-4 right-4 text-xs z-10">
+                            <div className={`inline-flex rounded-xl shadow-md overflow-hidden border ${cardBorder} transition-colors`}>
+                                {/* ON (Light Mode) */}
+                                <span 
+                                    // px-3 -> px-2로 변경하여 가로 너비 추가 축소
+                                    className={`px-2 py-1 transition-colors cursor-pointer font-bold text-center ${
+                                        isLightMode 
+                                            ? 'bg-violet-600 text-white' // Active (violet-600)
+                                            : `${cardBg} ${isLightMode ? 'text-gray-800' : 'text-gray-400'} hover:${isLightMode ? 'bg-gray-100' : 'bg-gray-700'}` // Inactive
+                                    }`} 
+                                    onClick={() => setIsLightMode(true)}
+                                >
+                                    ON
+                                </span>
+                                {/* OFF (Dark Mode) */}
+                                <span 
+                                    // px-3 -> px-2로 변경하여 가로 너비 추가 축소
+                                    className={`px-2 py-1 transition-colors cursor-pointer font-bold text-center border-l ${cardBorder} ${
+                                        !isLightMode 
+                                            ? 'bg-violet-600 text-white' // Active (violet-600)
+                                            : `${cardBg} ${isLightMode ? 'text-gray-800' : 'text-gray-400'} hover:${isLightMode ? 'bg-gray-100' : 'bg-gray-700'}` // Inactive
+                                    }`}
+                                    onClick={() => setIsLightMode(false)}
+                                >
+                                    OFF
+                                </span>
+                            </div>
+                        </div>
+
                         
                         <div className="text-center space-y-2 mb-8 pt-4">
                             {/* 추가된 문구 */}
-                            <p className="text-xs text-gray-400 font-medium tracking-wide">호야가 사랑으로 만들어준</p>
-                            <div className="flex justify-center items-center gap-2 text-indigo-600">
-                                <Dumbbell size={32} />
-                                <h1 className="text-3xl font-bold tracking-tight">득근 캘린더</h1>
+                            <p className={`text-xs font-medium tracking-wide ${isLightMode ? 'text-gray-400' : 'text-gray-500'}`}>호야가 사랑으로 만들어준</p>
+                            <div className="flex justify-center items-center gap-2">
+                                <Dumbbell size={32} className={textHighlight.replace('text-', 'text-')} />
+                                <h1 className={`text-3xl font-bold tracking-tight ${textDefault}`}>득근 캘린더</h1>
                             </div>
-                            <p className="text-gray-500 text-sm">오늘도 꾸준히, 건강한 습관 만들기</p>
+                            <p className={`text-sm ${textMuted}`}>오늘도 꾸준히, 건강한 습관 만들기</p>
                         </div>
 
-                        <div className="bg-white rounded-2xl shadow-sm border border-indigo-100 p-5 flex justify-around items-center">
+                        {/* 통계 요약 카드 */}
+                        <div className={`${cardBg} rounded-2xl shadow-sm border ${cardBorder} p-5 flex justify-around items-center`}>
                             <div className="text-center">
                                 <p className="text-xs text-gray-400 mb-1 uppercase tracking-wider font-semibold">총 운동 횟수</p>
-                                <p className="text-2xl font-bold text-indigo-600">{totalSessions}회</p>
+                                <p className={`text-2xl font-bold ${textHighlight}`}>{totalSessions}회</p>
                             </div>
-                            <div className="h-10 w-px bg-gray-100"></div>
+                            <div className={`h-10 w-px ${isLightMode ? 'bg-gray-100' : 'bg-gray-700'}`}></div>
                             <div className="text-center">
                                 <p className="text-xs text-gray-400 mb-1 uppercase tracking-wider font-semibold">총 운동 시간</p>
-                                <p className="text-2xl font-bold text-indigo-600">{formatDuration(totalMinutes)}</p>
+                                <p className={`text-2xl font-bold ${textHighlight}`}>{formatDuration(totalMinutes)}</p>
                             </div>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-5 space-y-5 border border-gray-100">
+                        {/* 입력 폼 */}
+                        <form onSubmit={handleSubmit} className={`${cardBg} rounded-2xl shadow-lg p-5 space-y-5 border ${cardBorder}`}>
+                            
+                            {/* 날짜 입력 */}
                             <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Calendar size={16} className="text-indigo-500" /> 날짜
+                                <label className={`flex items-center gap-2 text-sm font-semibold ${textMuted}`}>
+                                    <Calendar size={16} className={textHighlight.replace('text-', 'text-')} /> 날짜
                                 </label>
-                                <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className="w-full p-4 text-lg bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer" />
+                                <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} 
+                                    // 포커스 링 색상 변경: indigo-500 -> violet-500
+                                    className={`w-full p-4 text-lg border ${isLightMode ? 'border-gray-200 focus:ring-violet-500' : 'border-gray-600 focus:ring-violet-400'} ${inputBg} rounded-xl focus:outline-none focus:ring-2 transition-all cursor-pointer ${textDefault}`} />
                             </div>
 
+                            {/* 운동 시간 버튼 */}
                             <div className="space-y-2">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Clock size={16} className="text-indigo-500" /> 운동 시간
+                                <label className={`flex items-center gap-2 text-sm font-semibold ${textMuted}`}>
+                                    <Clock size={16} className={textHighlight.replace('text-', 'text-')} /> 운동 시간
                                 </label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {DURATION_OPTIONS.map((time) => (
-                                        <button key={time} type="button" onClick={() => setDuration(time)} className={`py-3 px-1 text-sm rounded-xl border transition-all active:scale-95 ${duration === time ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-gray-200 text-gray-600'}`}>{formatDuration(time)}</button>
+                                        <button key={time} type="button" onClick={() => setDuration(time)} 
+                                            className={`py-3 px-1 text-sm rounded-xl border transition-all active:scale-95 ${
+                                                duration === time 
+                                                // 배경 및 텍스트 색상 변경: indigo -> violet
+                                                ? `${isLightMode ? 'bg-violet-50 border-violet-500 text-violet-700' : 'bg-violet-900 border-violet-500 text-violet-300'} font-bold` 
+                                                : `${isLightMode ? 'bg-white border-gray-200 text-gray-600' : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'}`
+                                            }`}>{formatDuration(time)}</button>
                                     ))}
                                 </div>
                             </div>
 
+                            {/* 운동 부위 선택 및 세부 항목 */}
                             <div className="space-y-3">
-                                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                    <Activity size={16} className="text-indigo-500" /> 운동 부위
+                                <label className={`flex items-center gap-2 text-sm font-semibold ${textMuted}`}>
+                                    <Activity size={16} className={textHighlight.replace('text-', 'text-')} /> 운동 부위
                                 </label>
                                 <div className="flex flex-wrap gap-2">
                                     {BODY_PARTS.map((part) => (
-                                        <button key={part} type="button" onClick={() => toggleBodyPart(part)} className={`py-2 px-4 rounded-full text-sm font-medium transition-all shadow-sm active:scale-95 ${selectedParts.includes(part) ? 'bg-indigo-600 text-white shadow-indigo-200 transform scale-105' : 'bg-gray-100 text-gray-600'}`}>{part}</button>
+                                        <button key={part} type="button" onClick={() => toggleBodyPart(part)} 
+                                            className={`py-2 px-4 rounded-full text-sm font-medium transition-all shadow-sm active:scale-95 ${
+                                                selectedParts.includes(part) 
+                                                // 배경 및 쉐도우 색상 변경: indigo -> violet
+                                                ? `${isLightMode ? 'bg-violet-600 text-white shadow-violet-200 transform scale-105' : 'bg-violet-500 text-white shadow-violet-900 transform scale-105'}` 
+                                                : `${isLightMode ? 'bg-gray-100 text-gray-600' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`
+                                            }`}>{part}</button>
                                     ))}
                                 </div>
                                 
                                 {/* 상체 세부 항목 */}
                                 {selectedParts.includes('상체') && (
                                     <DetailSelector 
-                                        partName="상체" 
                                         exercises={UPPER_EXERCISES} 
                                         title="상체 세부 운동 선택 (가슴/등/복합/어깨 순)"
+                                        isLightMode={isLightMode}
                                     />
                                 )}
                                 
                                 {/* 하체 세부 항목 */}
                                 {selectedParts.includes('하체') && (
                                     <DetailSelector 
-                                        partName="하체" 
                                         exercises={LOWER_EXERCISES} 
                                         title="하체 세부 운동 선택 (복합/편측/고립 순)"
+                                        isLightMode={isLightMode}
                                     />
                                 )}
                             </div>
 
-                            <button type="submit" className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 active:scale-95 text-lg">
+                            {/* 기록 저장 버튼 */}
+                            <button type="submit" 
+                                // 배경 및 쉐도우 색상 변경: indigo -> violet
+                                className={`w-full py-4 ${isLightMode ? 'bg-violet-600 shadow-violet-200' : 'bg-violet-500 shadow-violet-900'} text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 text-lg`}>
                                 <Plus size={22} /> 기록 저장하기
                             </button>
                         </form>
 
+                        {/* 기록 리스트 */}
                         <div className="space-y-4">
-                            <h2 className="text-lg font-bold text-gray-800 px-1 flex items-center gap-2">
-                                <CheckCircle2 size={20} className="text-green-500" /> 최근 운동 기록
+                            <h2 className={`text-lg font-bold px-1 flex items-center gap-2 ${textDefault}`}>
+                                <CheckCircle2 size={20} className={isLightMode ? 'text-green-500' : 'text-green-400'} /> 최근 운동 기록
                             </h2>
                             {workouts.length === 0 ? (
-                                <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-gray-300 text-gray-400"><Dumbbell className="mx-auto mb-2 opacity-20" size={48} /><p>아직 기록된 운동이 없습니다.<br/>첫 운동을 시작해보세요!</p></div>
+                                <div className={`text-center py-10 rounded-2xl border border-dashed ${isLightMode ? 'bg-white border-gray-300' : 'bg-gray-800 border-gray-600'} ${textMuted}`}>
+                                    <Dumbbell className="mx-auto mb-2 opacity-20" size={48} />
+                                    <p>아직 기록된 운동이 없습니다.<br/>첫 운동을 시작해보세요!</p>
+                                </div>
                             ) : (
                                 <div className="space-y-3 pb-8">
                                     {workouts.map((workout) => (
-                                        <div key={workout.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 relative group">
+                                        <div key={workout.id} className={`${cardBg} p-5 rounded-2xl shadow-sm border ${cardBorder} relative group`}>
                                             <div className="flex justify-between items-center mb-2">
-                                                <span className="text-sm font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{workout.date}</span>
+                                                <span className={`text-sm font-bold px-2 py-0.5 rounded ${isLightMode ? 'bg-gray-100 text-gray-500' : 'bg-gray-700 text-gray-300'}`}>{workout.date}</span>
                                                 <button onClick={() => deleteWorkout(workout.id)} className="text-gray-300 hover:text-red-500 p-2"><Trash2 size={18} /></button>
                                             </div>
                                             <div className="flex flex-col gap-1 mb-2">
                                                 <div className="flex items-baseline gap-2 flex-wrap">
-                                                    <h3 className="text-2xl font-bold text-gray-800">{formatDuration(workout.duration)}</h3>
-                                                    <span className="text-lg font-semibold text-indigo-600">— {workout.parts.join(', ')}</span>
+                                                    <h3 className={`text-2xl font-bold ${textDefault}`}>{formatDuration(workout.duration)}</h3>
+                                                    <span className={`text-lg font-semibold ${textHighlight}`}>— {workout.parts.join(', ')}</span>
                                                 </div>
                                             </div>
                                             {workout.details && workout.details.length > 0 && (
-                                                <div className="mt-3 pt-3 border-t border-dashed border-gray-100">
+                                                <div className={`mt-3 pt-3 border-t border-dashed ${isLightMode ? 'border-gray-100' : 'border-gray-700'}`}>
                                                     <div className="flex flex-wrap gap-1.5">
+                                                        <p className="text-xs font-medium text-gray-400 mr-1">세부 운동:</p>
                                                         {workout.details.map((detail, idx) => (
-                                                            <span key={idx} className="bg-indigo-50 text-indigo-700 text-xs px-2.5 py-1 rounded-md font-medium flex items-center gap-1"><ChevronRight size={10} />{detail}</span>
+                                                            <span key={idx} className={`${selectedDetailBg} ${selectedDetailText} text-xs px-2.5 py-1 rounded-md font-medium flex items-center gap-1`}><ChevronRight size={10} />{detail}</span>
                                                         ))}
                                                     </div>
                                                 </div>
