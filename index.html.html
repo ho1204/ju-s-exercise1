@@ -8,7 +8,7 @@
     <!-- PWA 및 모바일 앱 설정 --><meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="득근 캘린더">
-    <!-- 테마 색상을 라벤더 계열(Violet-600: #7c3aed)로 변경 --><meta name="theme-color" content="#7c3aed"> 
+    <!-- 테마 색상을 라벤더 계열(Violet-400: #a78bfa)로 파스텔톤으로 변경 --><meta name="theme-color" content="#a78bfa"> 
     <meta name="mobile-web-app-capable" content="yes">
 
     <!-- Tailwind CSS 불러오기 --><script src="https://cdn.tailwindcss.com"></script>
@@ -87,19 +87,20 @@
             const [selectedDetails, setSelectedDetails] = useState([]);
             const [isLightMode, setIsLightMode] = useState(true); // ON: Light, OFF: Dark
 
-            // 라벤더 색상 계열 (Violet)로 변경
+            // 라벤더 색상 계열 (Violet)을 파스텔 톤으로 조정
             const baseBg = isLightMode ? 'bg-gray-50' : 'bg-gray-900';
             const cardBg = isLightMode ? 'bg-white' : 'bg-gray-800';
             const cardBorder = isLightMode ? 'border-gray-100' : 'border-gray-700';
             const textDefault = isLightMode ? 'text-gray-800' : 'text-gray-100';
             const textMuted = isLightMode ? 'text-gray-500' : 'text-gray-400';
-            const textHighlight = isLightMode ? 'text-violet-600' : 'text-violet-400'; // 라벤더 계열 하이라이트
+            // 파스텔톤 하이라이트: Light-violet-500, Dark-violet-300
+            const textHighlight = isLightMode ? 'text-violet-500' : 'text-violet-300'; 
             const inputBg = isLightMode ? 'bg-gray-50' : 'bg-gray-700';
             
-            // 라벤더 계열 선택 상세 정보 스타일
-            const selectedDetailBg = isLightMode ? 'bg-violet-50' : 'bg-violet-900';
-            const selectedDetailText = isLightMode ? 'text-violet-700' : 'text-violet-300';
-            const selectedDetailBorder = isLightMode ? 'border-violet-200' : 'border-violet-800';
+            // 라벤더 계열 선택 상세 정보 스타일 (파스텔톤으로 조정)
+            const selectedDetailBg = isLightMode ? 'bg-violet-100' : 'bg-violet-900'; // Light: 50 -> 100
+            const selectedDetailText = isLightMode ? 'text-violet-600' : 'text-violet-300'; // Light: 700 -> 600
+            const selectedDetailBorder = isLightMode ? 'border-violet-300' : 'border-violet-800'; // Light: 200 -> 300
             
             const DURATION_OPTIONS = [30, 60, 90, 120, 150, 180];
 
@@ -265,10 +266,10 @@
                             <div className={`inline-flex rounded-xl shadow-md overflow-hidden border ${cardBorder} transition-colors`}>
                                 {/* ON (Light Mode) */}
                                 <span 
-                                    // px-3 -> px-2로 변경하여 가로 너비 추가 축소
+                                    // 파스텔톤: bg-violet-600 -> bg-violet-400으로 변경
                                     className={`px-2 py-1 transition-colors cursor-pointer font-bold text-center ${
                                         isLightMode 
-                                            ? 'bg-violet-600 text-white' // Active (violet-600)
+                                            ? 'bg-violet-400 text-white' // Active (violet-400)
                                             : `${cardBg} ${isLightMode ? 'text-gray-800' : 'text-gray-400'} hover:${isLightMode ? 'bg-gray-100' : 'bg-gray-700'}` // Inactive
                                     }`} 
                                     onClick={() => setIsLightMode(true)}
@@ -277,10 +278,10 @@
                                 </span>
                                 {/* OFF (Dark Mode) */}
                                 <span 
-                                    // px-3 -> px-2로 변경하여 가로 너비 추가 축소
+                                    // 파스텔톤: bg-violet-600 -> bg-violet-400으로 변경
                                     className={`px-2 py-1 transition-colors cursor-pointer font-bold text-center border-l ${cardBorder} ${
                                         !isLightMode 
-                                            ? 'bg-violet-600 text-white' // Active (violet-600)
+                                            ? 'bg-violet-400 text-white' // Active (violet-400)
                                             : `${cardBg} ${isLightMode ? 'text-gray-800' : 'text-gray-400'} hover:${isLightMode ? 'bg-gray-100' : 'bg-gray-700'}` // Inactive
                                     }`}
                                     onClick={() => setIsLightMode(false)}
@@ -323,8 +324,8 @@
                                     <Calendar size={16} className={textHighlight.replace('text-', 'text-')} /> 날짜
                                 </label>
                                 <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} 
-                                    // 포커스 링 색상 변경: indigo-500 -> violet-500
-                                    className={`w-full p-4 text-lg border ${isLightMode ? 'border-gray-200 focus:ring-violet-500' : 'border-gray-600 focus:ring-violet-400'} ${inputBg} rounded-xl focus:outline-none focus:ring-2 transition-all cursor-pointer ${textDefault}`} />
+                                    // 포커스 링 색상 변경: focus:ring-violet-500/400 -> focus:ring-violet-400/300
+                                    className={`w-full p-4 text-lg border ${isLightMode ? 'border-gray-200 focus:ring-violet-400' : 'border-gray-600 focus:ring-violet-300'} ${inputBg} rounded-xl focus:outline-none focus:ring-2 transition-all cursor-pointer ${textDefault}`} />
                             </div>
 
                             {/* 운동 시간 버튼 */}
@@ -337,8 +338,9 @@
                                         <button key={time} type="button" onClick={() => setDuration(time)} 
                                             className={`py-3 px-1 text-sm rounded-xl border transition-all active:scale-95 ${
                                                 duration === time 
-                                                // 배경 및 텍스트 색상 변경: indigo -> violet
-                                                ? `${isLightMode ? 'bg-violet-50 border-violet-500 text-violet-700' : 'bg-violet-900 border-violet-500 text-violet-300'} font-bold` 
+                                                // 파스텔톤: Light-bg-violet-50/border-violet-500/text-violet-700 -> Light-bg-violet-100/border-violet-400/text-violet-600
+                                                // 파스텔톤: Dark-bg-violet-900/border-violet-500/text-violet-300 -> Dark-bg-violet-800/border-violet-400/text-violet-200
+                                                ? `${isLightMode ? 'bg-violet-100 border-violet-400 text-violet-600' : 'bg-violet-800 border-violet-400 text-violet-200'} font-bold` 
                                                 : `${isLightMode ? 'bg-white border-gray-200 text-gray-600' : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'}`
                                             }`}>{formatDuration(time)}</button>
                                     ))}
@@ -355,8 +357,9 @@
                                         <button key={part} type="button" onClick={() => toggleBodyPart(part)} 
                                             className={`py-2 px-4 rounded-full text-sm font-medium transition-all shadow-sm active:scale-95 ${
                                                 selectedParts.includes(part) 
-                                                // 배경 및 쉐도우 색상 변경: indigo -> violet
-                                                ? `${isLightMode ? 'bg-violet-600 text-white shadow-violet-200 transform scale-105' : 'bg-violet-500 text-white shadow-violet-900 transform scale-105'}` 
+                                                // 파스텔톤: Light-bg-violet-600/shadow-violet-200 -> Light-bg-violet-400/shadow-violet-100
+                                                // 파스텔톤: Dark-bg-violet-500/shadow-violet-900 -> Dark-bg-violet-400/shadow-violet-800
+                                                ? `${isLightMode ? 'bg-violet-400 text-white shadow-violet-100 transform scale-105' : 'bg-violet-400 text-white shadow-violet-800 transform scale-105'}` 
                                                 : `${isLightMode ? 'bg-gray-100 text-gray-600' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`
                                             }`}>{part}</button>
                                     ))}
@@ -383,8 +386,9 @@
 
                             {/* 기록 저장 버튼 */}
                             <button type="submit" 
-                                // 배경 및 쉐도우 색상 변경: indigo -> violet
-                                className={`w-full py-4 ${isLightMode ? 'bg-violet-600 shadow-violet-200' : 'bg-violet-500 shadow-violet-900'} text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 text-lg`}>
+                                // 파스텔톤: Light-bg-violet-600/shadow-violet-200 -> Light-bg-violet-400/shadow-violet-100
+                                // 파스텔톤: Dark-bg-violet-500/shadow-violet-900 -> Dark-bg-violet-400/shadow-violet-800
+                                className={`w-full py-4 ${isLightMode ? 'bg-violet-400 shadow-violet-100' : 'bg-violet-400 shadow-violet-800'} text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 text-lg`}>
                                 <Plus size={22} /> 기록 저장하기
                             </button>
                         </form>
